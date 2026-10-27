@@ -1,0 +1,19 @@
+# Original CourseSphere Flask API, not the separate educational CRUD lab.
+# Run with: docker compose -f compose.official.yaml up --build -d
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+WORKDIR /srv/backend
+RUN groupadd --system coursesphere && useradd --system --gid coursesphere --home /nonexistent coursesphere
+COPY backend/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt 'gunicorn>=22,<24' \
+    && rm /tmp/requirements.txt
+COPY backend /srv/backend
+USER coursesphere
+EXPOSE 8091
+# /health indicates process liveness only; Firebase readiness is a separate concern.
+HEALTHCHECK --interval=20s --timeout=4s --start-period=25s \
+    CMD python -c 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8091/health",timeout=3)' || exit 1
+# Gunicorn access logging is disabled by default (do not enable --access-logfile);
+# Flask instead emits sanitized route-template structured logs.
+CMD ["gunicorn", "--bind", "0.0.0.0:8091", "--workers", "1", "--threads", "4", "--timeout", "30", "endpoints:app"]

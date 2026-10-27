@@ -1,0 +1,474 @@
+name: CourseSphere secure engineering
+"on":
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stdlib-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify local sandbox and policy tests
+        run: python3 -m scripts.record_offline_v16 && python3 -m scripts.release_gate_v19_8 && python3 -m scripts.doctor_v19
+      - name: Validate fail-closed evidence and advisory classifiers
+        run: |
+          python3 -m unittest tests.test_evidence_integrity_vlab tests.test_npm_audit_triage_vlab tests.test_npm_lock_integrity_vlab -q
+      - name: Classify historical evidence freshness (diagnostic, no acceptance points)
+        run: |
+          python3 -m scripts.review_evidence_freshness_r3 \
+            --output evidence/generated/EVIDENCE_REVIEW_R3.json
+      - name: Test quota failures, cross-replica request correlation and evidence classification
+        run: |
+          python3 -m unittest tests.test_quota_r3_failure_modes tests.test_request_correlation_r3 tests.test_evidence_review_r3 -q
+      - name: Prove dependency-readiness cache fail-closed contracts offline
+        run: python3 -m unittest tests.test_readiness_r4 -q
+      - name: Test private readiness scrapes, per-replica alert and recovery
+        run: python3 -m unittest tests.test_readiness_scrape_r5 tests.test_readiness_slo_r4 -q
+      - name: R13 emulator orchestrator and self-contained Fedora diagnostic (offline safety)
+        run: python3 -m unittest tests.test_r13_emulator_orchestrator tests.test_r13_emulator_teardown tests.test_r13_diagnostic -q
+      - name: R14 scoped Firebase emulator cleanup and tamper-proof quota evidence
+        run: |
+          python3 -m unittest tests.test_r14_scoped_fixture_cleanup tests.test_r14_proof_fail_closed tests.test_r14_official_emulator_fixture_scope tests.test_r14_release_gate -q
+          # This job uses loopback fixtures, NOT live Firebase, and earns zero acceptance points.
+      - name: Verify shared Firebase quota resilience including clock skew
+        run: python3 -m unittest tests.test_v17_shared_quota -q
+      - name: Fail closed on ambiguous Firebase configuration and contradictory runtime evidence
+        run: |
+          python3 -m unittest tests.test_firebase_configuration_r6 tests.test_firebase_sdk_wiring_r6 tests.test_observability_gate_r6 -q
+      - name: Prove R7 strict request parsing, signed demo tokens and atomic SQLite quotas
+        run: |
+          python3 -m unittest tests.test_r7_session_and_quota tests.test_r7_http_framing -q
+          python3 -m scripts.prove_r7_dual_replica_auth
+          python3 -m scripts.release_gate_work_v19_9
+      - name: R8 atomic audit, unambiguous HTTP framing and evidence binding
+        run: |
+          python3 -m unittest tests.test_r8_atomic_audit tests.test_r8_http_transactional_integrity tests.test_r8_release_gate -q
+          python3 -m scripts.prove_r8_atomic_audit
+          python3 -m scripts.release_gate_r8 --require-r8
+      - name: R9 bound slow clients, reject truncated HTTP bodies and verify source binding
+        run: |
+          python3 -m unittest tests.test_r9_http_body_transport tests.test_r9_release_gate -q
+          python3 -m scripts.prove_r9_transport
+          python3 -m scripts.release_gate_r9 --require-r9
+      - name: R10 absolute TCP read deadline and zero-weight evidence gate
+        run: |
+          python3 -m unittest tests.test_r10_absolute_deadline tests.test_r10_release_gate -q
+          python3 -m scripts.prove_r10_deadline
+          python3 -m scripts.release_gate_r10 --require-r10
+      - name: R11 original Flask distributed quota proof protocol (offline mock only)
+        run: |
+          python3 -m unittest tests.test_r11_official_quota_proof tests.test_r11_release_gate -q
+          # Do not require a live emulator proof from this offline job.
+          python3 -m scripts.release_gate_r11
+      - name: Upload R10 synthetic absolute-deadline proof (no credentials)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r10-synthetic-absolute-deadline
+          path: |
+            evidence/generated/R10_SYNTHETIC_ABSOLUTE_DEADLINE.json
+            evidence/generated/RELEASE_GATE_R10_DERIVED.json
+          if-no-files-found: warn
+      - name: Upload R9 synthetic transport proof (no user credentials)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r9-synthetic-tcp-transport
+          path: |
+            evidence/generated/R9_SYNTHETIC_HTTP_TRANSPORT.json
+            evidence/generated/RELEASE_GATE_R9_DERIVED.json
+          if-no-files-found: warn
+      - name: Upload R8 synthetic audit proof (no real credentials)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r8-synthetic-transactional-audit
+          path: |
+            evidence/generated/R8_SYNTHETIC_ATOMIC_AUDIT.json
+            evidence/generated/RELEASE_GATE_R8_DERIVED.json
+          if-no-files-found: warn
+      - name: Upload R7 synthetic two-replica HTTP evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r7-synthetic-two-replica-http
+          path: evidence/generated/R7_SYNTHETIC_REPLICA_HTTP.json
+          if-no-files-found: warn
+      - name: Check for leaked credentials before publication
+        run: |
+          python3 scripts/check_secrets.py
+          python3 scripts/security_preflight_v14.py
+      - name: Review npm lockfile integrity without downloads
+        run: python3 scripts/npm_lock_integrity_vlab.py --output evidence/generated/NPM_LOCK_INTEGRITY_VLAB.json
+      - name: Create offline dependency SBOM
+        run: python3 scripts/generate_sbom.py
+      - name: Upload sanitized offline evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-handler-offline-evidence
+          path: |
+            evidence/generated/ORIGIN_BEFORE_AFTER.json
+            evidence/generated/HTTP_GATEWAY_V8.json
+            evidence/generated/SBOM_frontend_CycloneDX.json
+            evidence/generated/EVIDENCE_REVIEW_R3.json
+            evidence/generated/RELEASE_GATE_R7_DERIVED.json
+            evidence/generated/NPM_LOCK_INTEGRITY_VLAB.json
+            evidence/generated/SECRET_PREFLIGHT_V14.json
+            evidence/generated/RELEASE_GATE_V19.json
+            evidence/generated/RELEASE_GATE_V19_3.json
+            evidence/generated/RELEASE_GATE_V19_5.json
+            evidence/generated/RELEASE_GATE_V19_6.json
+            evidence/generated/RELEASE_GATE_V19_8.json
+            evidence/generated/F04_UPSTREAM_CREDENTIAL_EXPOSURE.json
+            evidence/generated/STATUS_V19.json
+            reports/CONTROLE_V19.html
+          if-no-files-found: warn
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies and build original React against demo config
+        run: bash scripts/verify_frontend_build_v14_2.sh
+      - name: Verify session isolation against stale async responses
+        run: |
+          node scripts/test_session_gate_v19_2.cjs
+          node scripts/test_user_chats_runtime_v19_2.cjs
+          node scripts/test_profile_session_runtime_v19_2.cjs
+      - name: Save verified frontend build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-react-production-build
+          path: evidence/generated/FRONTEND_BUILD_V13.json
+          if-no-files-found: warn
+      - name: Capture full and production npm advisories without changing dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .local
+          chmod 700 .local
+          set +e
+          (cd frontend && npm audit --json) > .local/npm-audit-full.json
+          full_status=$?
+          (cd frontend && npm audit --omit=dev --json) > .local/npm-audit-production.json
+          production_status=$?
+          set -e
+          # npm returns 1 when it finds advisories; malformed/partial responses
+          # are rejected by our parser regardless of the process status.
+          if [[ "$full_status" -gt 1 || "$production_status" -gt 1 ]]; then
+            echo 'npm audit execution failed; advisory data not trustworthy' >&2
+            exit 2
+          fi
+      - name: Fail closed on high or critical production advisories
+        run: |
+          python3 scripts/npm_audit_triage_vlab.py \
+            --full .local/npm-audit-full.json \
+            --production .local/npm-audit-production.json \
+            --fail-on-prod-high \
+            --require-npm-metadata \
+            --output evidence/generated/NPM_AUDIT_TRIAGE_VLAB.json
+      - name: Save sanitized npm advisory summary only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-sca-sanitized-triage
+          path: evidence/generated/NPM_AUDIT_TRIAGE_VLAB.json
+          if-no-files-found: warn
+  python-sast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Bandit
+        run: python -m pip install 'bandit>=1.7,<2'
+      - name: Static security analysis
+        run: bandit -r backend -x backend/cornell-course-sphere-data -lll
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build independent demo backend
+        run: docker build -f backend/Dockerfile -t coursesphere-demo:ci .
+  native-nginx-proof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install and validate actual Nginx configuration
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y nginx
+          python3 scripts/check_nginx_main_config_v19_3.py
+          python3 scripts/prove_nginx_native.py
+      - name: Save load distribution and failover evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nginx-actual-gateway-load-failover
+          path: evidence/generated/NGINX_LIVE_V9.json
+  original-flask-nginx-replication:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install real Flask HTTP libraries
+        run: python3 -m pip install 'Flask>=3,<4' 'Flask-Cors>=4,<6'
+      - name: Install native Nginx
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y nginx
+      - name: Exercise original patched Flask behind two native Nginx backends
+        run: |
+          python3 scripts/check_nginx_main_config_v19_3.py
+          python3 scripts/prove_original_flask_nginx.py
+      - name: Publish Flask+Nginx evidence only when recorded
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-flask-two-replicas-native-nginx
+          path: evidence/generated/NGINX_ORIGINAL_FLASK_STUBBED_V19.json
+          if-no-files-found: warn
+
+  original-stack-native-gateway-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install real Nginx for original-stack routing and failover contract
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y nginx
+      - name: Prove actual original-stack edge contract with synthetic upstreams
+        run: python3 scripts/prove_official_nginx_contract_v19_7.py
+      - name: Publish labeled original-stack native Nginx evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-stack-native-nginx-routing-contract
+          path: evidence/generated/NGINX_OFFICIAL_ROUTING_V19_7.json
+          if-no-files-found: warn
+
+  original-docker-flask-react-replicas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and start two original Flask replicas and original React
+        run: docker compose -f compose.official.yaml up -d --build
+      - name: Verify real container load distribution and controlled failover
+        run: python3 scripts/verify_official_docker_v19_7.py --failover
+      - name: Publish labeled original Docker evidence (without credentials)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-flask-react-docker-two-replicas
+          path: evidence/runtime/OFFICIAL_DOCKER_V19_7.json
+          if-no-files-found: warn
+      - name: Stop original stack
+        if: always()
+        run: docker compose -f compose.official.yaml down -v --remove-orphans || true
+
+  original-docker-observability-v19-8:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Start ORIGINAL Flask replicas, authenticated Prometheus and Grafana
+        run: bash scripts/start_official_observability_v19_8.sh
+      - name: Verify real two-replica scraping, SLO instrumentation and failover
+        run: python3 scripts/verify_official_observability_v19_8.py --failover
+      - name: Persist source-hash-bound proof without secrets
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-flask-prometheus-grafana-v19-8
+          path: evidence/runtime/OFFICIAL_OBSERVABILITY_V19_8.json
+          if-no-files-found: warn
+      - name: Shut down original monitoring stack
+        if: always()
+        run: |
+          docker compose --env-file .env.official.observability -f compose.official.yaml -f compose.official.observability.yaml --profile observability down -v --remove-orphans || true
+
+  r12-strict-json-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: R12 parser regression and source-bound offline evidence
+        run: |
+          python3 -m scripts.prove_r12_strict_json
+          python3 -m scripts.release_gate_r12 --require-r12
+      - name: Upload isolated R12 offline parser proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r12-offline-strict-json-not-flask-firebase
+          path: evidence/generated/R12_ORIGINAL_FLASK_STRICT_JSON_OFFLINE.json
+          if-no-files-found: warn
+
+  original-flask-http-before-after:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install ONLY real Flask HTTP dependencies (Firebase is mocked)
+        run: python3 -m pip install 'Flask>=3,<4' 'Flask-Cors>=4,<6'
+      - name: Prove liveness versus readiness over actual Flask HTTP (Firebase mocked)
+        run: python3 -m integration.run_readiness_http_r4
+      - name: R12 verify strict JSON on REAL Flask HTTP (synthetic Firebase)
+        run: python3 -m integration.run_r12_flask_strict_json
+      - name: R11 prove server-generated replica labels over REAL Flask HTTP
+        run: python3 -m integration.run_r11_flask_replica_header
+      - name: Compare original vs corrected Flask endpoints over real loopback HTTP
+        run: python3 -m integration.run_original_http_stubbed
+      - name: Verify V19.4 authenticated writes and private auth telemetry (Flask WSGI)
+        run: python3 -m integration.run_v19_4_flask_wsgitest
+      - name: Verify strict CORS runtime on the original patched Flask
+        run: python3 -m integration.run_v19_6_cors_runtime
+      - name: Verify bearer-protected original Flask metrics over real WSGI
+        run: python3 -m integration.run_v19_8_metrics_runtime
+      - name: Upload provenance-labeled before/after HTTP evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flask-http-original-vs-corrected-synthetic-services
+          path: |
+            evidence/generated/ORIGINAL_FLASK_HTTP_BEFORE_AFTER_V13.json
+            evidence/generated/FLASK_AUTH_QUOTAS_V19_4.json
+            evidence/generated/FLASK_CORS_RUNTIME_V19_6.json
+            evidence/generated/FLASK_METRICS_AUTH_V19_8.json
+            evidence/generated/FLASK_READINESS_HTTP_R5.json
+            evidence/generated/FLASK_REPLICA_HEADERS_R11.json
+            evidence/generated/R12_ORIGINAL_FLASK_STRICT_JSON_HTTP.json
+          if-no-files-found: warn
+
+  official-flask-firebase-emulators:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install official Python backend dependencies
+        run: python3 -m pip install -r backend/requirements.txt
+      - name: Install Firebase Emulator CLI
+        run: npm install --global firebase-tools@15.34.0
+      - name: Exercise REAL Flask HTTP with Firebase Auth and Database emulators
+        run: bash scripts/verify_official_emulators.sh
+      - name: R14 require scoped emulator cleanup and fresh source hashes
+        run: python3 -m scripts.release_gate_r14 --require-r14
+      - name: Save sanitized HTTP integration results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-flask-firebase-emulator-tests
+          path: |
+            evidence/generated/FLASK_FIREBASE_EMULATORS_V12.json
+            evidence/generated/R11_OFFICIAL_FLASK_TWO_REPLICA_QUOTA.json
+            evidence/generated/RELEASE_GATE_R14_DERIVED.json
+          if-no-files-found: warn
+
+  docker-observability-failover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate isolated local Docker secrets
+        run: |
+          python3 - <<'PYSECRETS'
+          import secrets
+          from pathlib import Path
+          Path('.env').write_text('DEMO_SIGNING_KEY='+secrets.token_urlsafe(48)+'\nGRAFANA_ADMIN_PASSWORD='+secrets.token_urlsafe(32)+'\n')
+          PYSECRETS
+          chmod 600 .env
+      - name: Start two replicas, Nginx, Prometheus and Grafana
+        run: docker compose --profile observability up -d --build
+      - name: Verify replicas, metrics, Grafana provisioning and controlled failover
+        run: python3 scripts/verify_docker_stack.py --failover
+      - name: Save ONLY sanitized operational evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-prometheus-grafana-failover
+          path: evidence/runtime/DOCKER_STACK_V13.json
+          if-no-files-found: warn
+      - name: Stop test containers
+        if: always()
+        run: docker compose --profile observability down -v --remove-orphans || true
+
+  integrated-native-r15-work:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install local test dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y nginx prometheus
+          python3 -m pip install -r backend/requirements.txt gunicorn==23.0.0
+          npm install --global firebase-tools@15.34.0
+      - name: Build React and test alert semantics
+        run: |
+          bash scripts/verify_frontend_build_v14_2.sh
+          promtool test rules ops/prometheus/alerts.official.test.yml
+      - name: Prove real authenticated failover and shared quotas
+        run: bash scripts/verify_integrated_native_work.sh
+      - name: Save sanitized source-bound proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r15-native-real-firebase-failover
+          path: evidence/generated/INTEGRATED_NATIVE_WORK.json

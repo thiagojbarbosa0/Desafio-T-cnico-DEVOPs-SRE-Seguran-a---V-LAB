@@ -1,0 +1,31 @@
+groups:
+  - name: coursesphere-local-alerts
+    rules:
+      - alert: CourseSphereInstanceUnavailable
+        expr: up{job="coursesphere-demo"} == 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "CourseSphere demo replica unavailable"
+      - alert: CourseSphereHighErrorRate
+        expr: sum(rate(coursesphere_http_requests_total{status_class="5xx"}[5m])) / clamp_min(sum(rate(coursesphere_http_requests_total[5m])), 0.001) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CourseSphere demo 5xx ratio exceeds 5%"
+      - alert: CourseSphereLoginLatencyHigh
+        expr: histogram_quantile(0.95, sum by (le) (rate(coursesphere_http_duration_seconds_bucket{route="/api/demo/session"}[5m]))) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Local demo session p95 latency above 300 ms"
+      - alert: CourseSphereCourseCrudAvailabilityLow
+        expr: sum(rate(coursesphere_http_requests_total{route=~"/api/courses.*",status_class="5xx"}[5m])) / clamp_min(sum(rate(coursesphere_http_requests_total{route=~"/api/courses.*"}[5m])), 0.001) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Course CRUD error fraction above 1%"

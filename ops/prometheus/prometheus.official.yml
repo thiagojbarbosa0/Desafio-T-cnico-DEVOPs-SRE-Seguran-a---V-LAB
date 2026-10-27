@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+scrape_configs:
+  - job_name: coursesphere-original
+    metrics_path: /metrics
+    authorization:
+      type: Bearer
+      credentials_file: /run/secrets/official_metrics_token
+    static_configs:
+      - targets: ['official_api_a:8091', 'official_api_b:8091']
+rule_files:
+  - /etc/prometheus/alerts.yml

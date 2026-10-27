@@ -1,0 +1,188 @@
+{
+  "uid": "coursesphere-original-v19-8",
+  "title": "CourseSphere Original | Flask AppSec & SRE",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Original replicas up",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "coursesphere-original-prom"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(up{job=\"coursesphere-original\"})"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "5xx error fraction (5m)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "coursesphere-original-prom"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(coursesphere_original_http_requests_total{status_class=\"5xx\",route!~\"/health|/ready\"}[5m])) / clamp_min(sum(rate(coursesphere_original_http_requests_total{route!~\"/health|/ready\"}[5m])), 0.001)"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "p95 request latency (seconds)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "coursesphere-original-prom"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(coursesphere_original_http_duration_seconds_bucket{route!~\"/health|/ready\"}[5m])))"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Traffic per replica",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "coursesphere-original-prom"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (instance) (rate(coursesphere_original_http_requests_total[1m]))"
+        }
+      ],
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Auth failures by route",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "coursesphere-original-prom"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (route) (rate(coursesphere_original_auth_attempts_total{result=\"denied\"}[5m]))"
+        }
+      ],
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "5xx per replica",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "coursesphere-original-prom"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (instance) (rate(coursesphere_original_http_requests_total{status_class=\"5xx\"}[5m]))"
+        }
+      ],
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Firebase Auth + RTDB readiness per replica",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "coursesphere-original-prom"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "coursesphere_original_firebase_ready{job=\"coursesphere-original\"}"
+        }
+      ],
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "description": "1 = Auth and RTDB available; 0 = degraded. Each authorized Prometheus scrape probes the dependencies on its own Flask replica. Replica process failures remain visible in the up metric.",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    }
+  ],
+  "tags": [
+    "coursesphere",
+    "original",
+    "sre",
+    "appsec"
+  ]
+}

@@ -1,0 +1,111 @@
+rule_files:
+  - alerts.official.yml
+evaluation_interval: 1m
+tests:
+  - name: Healthy traffic does not alert
+    interval: 1m
+    input_series:
+      - series: 'up{job="coursesphere-original",instance="a"}'
+        values: '1+0x12'
+      - series: 'coursesphere_original_http_requests_total{route="/users/info",status_class="2xx"}'
+        values: '0+100x12'
+      - series: 'coursesphere_original_http_requests_total{route="/users/info",status_class="5xx"}'
+        values: '0+0x12'
+      - series: 'coursesphere_original_http_duration_seconds_bucket{route="/users/info",le="0.5"}'
+        values: '0+100x12'
+      - series: 'coursesphere_original_http_duration_seconds_bucket{route="/users/info",le="+Inf"}'
+        values: '0+100x12'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: OriginalAPIAvailabilitySLO
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: OriginalAPILatencySLO
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: OriginalAPIReplicaUnavailable
+        exp_alerts: []
+  - name: Sustained error ratio and p95 violations alert after grace period
+    interval: 1m
+    input_series:
+      - series: 'coursesphere_original_http_requests_total{route="/users/info",status_class="2xx"}'
+        values: '0+98x12'
+      - series: 'coursesphere_original_http_requests_total{route="/users/info",status_class="5xx"}'
+        values: '0+2x12'
+      - series: 'coursesphere_original_http_duration_seconds_bucket{route="/users/info",le="0.5"}'
+        values: '0+90x12'
+      - series: 'coursesphere_original_http_duration_seconds_bucket{route="/users/info",le="1"}'
+        values: '0+100x12'
+      - series: 'coursesphere_original_http_duration_seconds_bucket{route="/users/info",le="+Inf"}'
+        values: '0+100x12'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: OriginalAPIAvailabilitySLO
+        exp_alerts: []
+      - eval_time: 3m
+        alertname: OriginalAPILatencySLO
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: OriginalAPIAvailabilitySLO
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations: {summary: Original Flask 5xx rate exceeds 1 percent}
+      - eval_time: 10m
+        alertname: OriginalAPILatencySLO
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations: {summary: Original Flask p95 request time exceeds 500 ms}
+  - name: No traffic does not imply an application SLO violation
+    interval: 1m
+    input_series:
+      - series: 'up{job="coursesphere-original",instance="a"}'
+        values: '1+0x12'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: OriginalAPIAvailabilitySLO
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: OriginalAPILatencySLO
+        exp_alerts: []
+  - name: Replica outage alerts and resolves after recovery
+    interval: 1m
+    input_series:
+      - series: 'up{job="coursesphere-original",instance="a"}'
+        values: '1 0 0 0 1 1'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: OriginalAPIReplicaUnavailable
+        exp_alerts: []
+      - eval_time: 2m
+        alertname: OriginalAPIReplicaUnavailable
+        exp_alerts:
+          - exp_labels: {job: coursesphere-original, instance: a, severity: warning}
+            exp_annotations: {summary: CourseSphere original Flask replica is unavailable}
+      - eval_time: 5m
+        alertname: OriginalAPIReplicaUnavailable
+        exp_alerts: []
+  - name: Firebase readiness degradation and recovery
+    interval: 1m
+    input_series:
+      - series: 'coursesphere_original_firebase_ready{job="coursesphere-original",instance="a"}'
+        values: '0 0 0 1 1'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: OriginalAPIDependencyReadinessDegraded
+        exp_alerts:
+          - exp_labels: {job: coursesphere-original, instance: a, severity: warning}
+            exp_annotations: {summary: CourseSphere original Firebase Auth or RTDB readiness is degraded}
+      - eval_time: 4m
+        alertname: OriginalAPIDependencyReadinessDegraded
+        exp_alerts: []
+  - name: Missing readiness gauge is not healthy evidence
+    interval: 1m
+    input_series:
+      - series: 'up{job="coursesphere-original",instance="a"}'
+        values: '1+0x5'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: OriginalAPIReadinessTelemetryMissing
+        exp_alerts:
+          - exp_labels: {job: coursesphere-original, instance: a, severity: warning}
+            exp_annotations: {summary: CourseSphere replica is up but not publishing Firebase readiness evidence}

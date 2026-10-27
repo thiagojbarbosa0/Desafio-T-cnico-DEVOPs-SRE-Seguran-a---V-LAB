@@ -1,0 +1,29 @@
+# Never send private local secrets or test credentials into a Docker build context
+.git
+.github
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+**/credentials.json
+**/service-account*.json
+**/reddit_key.json
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+.venv
+venv
+**/__pycache__
+**/*.pyc
+**/node_modules
+frontend/dist
+.local
+evidence
+reports
+audit
+*.zip
+*.log
+# Cornell datasets stay in the repository but are not needed for these APIs.
+backend/cornell-course-sphere-data

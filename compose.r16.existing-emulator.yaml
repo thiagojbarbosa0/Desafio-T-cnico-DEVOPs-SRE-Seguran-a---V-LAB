@@ -1,0 +1,112 @@
+# CourseSphere R16 isolated Docker pilot: NEVER controls the old Compose stack.
+# Existing healthy local Auth/RTDB emulator is reached through its existing network.
+name: coursesphere-r16-pilot
+x-api: &api
+  build:
+    context: .
+    dockerfile: backend/Dockerfile.official
+  restart: unless-stopped
+  read_only: true
+  tmpfs: ["/tmp:size=16m,mode=1777"]
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  pids_limit: 80
+  mem_limit: 300m
+  networks: [r16_private, firebase_existing]
+x-api-env: &api-env
+  ALLOWED_ORIGINS: http://127.0.0.1:18081,http://localhost:18081
+  PYTHONDONTWRITEBYTECODE: '1'
+  COURSESPHERE_TRUST_GATEWAY_REQUEST_ID: '1'
+  COURSESPHERE_USE_FIREBASE_EMULATORS: '1'
+  COURSESPHERE_DOCKER_EMULATOR_MODE: '1'
+  GCLOUD_PROJECT: demo-coursesphere-vlab
+  FIREBASE_AUTH_EMULATOR_HOST: official_firebase_emulators:9099
+  FIREBASE_DATABASE_EMULATOR_HOST: official_firebase_emulators:9000
+  COURSESPHERE_METRICS_ENABLED: '1'
+  COURSESPHERE_METRICS_TOKEN_FILE: /run/secrets/official_metrics_token
+services:
+  official_api_a:
+    <<: *api
+    environment:
+      <<: *api-env
+      COURSESPHERE_REPLICA_NAME: official_api_a
+    secrets: [official_metrics_token]
+    ports: ["127.0.0.1:18091:8091"]
+  official_api_b:
+    <<: *api
+    environment:
+      <<: *api-env
+      COURSESPHERE_REPLICA_NAME: official_api_b
+    secrets: [official_metrics_token]
+    ports: ["127.0.0.1:18092:8091"]
+  official_frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.official
+    user: nginx
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:size=16m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks: [r16_private]
+  official_gateway:
+    user: nginx
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      official_api_a: {condition: service_healthy}
+      official_api_b: {condition: service_healthy}
+      official_frontend: {condition: service_healthy}
+    ports: ["127.0.0.1:18081:8081"]
+    volumes:
+      - ./ops/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ops/nginx/gateway.official.conf:/etc/nginx/conf.d/default.conf:ro
+    read_only: true
+    tmpfs: ["/tmp:size=16m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks: [r16_private]
+  official_prometheus:
+    image: prom/prometheus:v2.55.1
+    restart: unless-stopped
+    depends_on:
+      official_api_a: {condition: service_healthy}
+      official_api_b: {condition: service_healthy}
+    command: ['--config.file=/etc/prometheus/prometheus.yml', '--storage.tsdb.path=/prometheus']
+    volumes:
+      - ./ops/prometheus/prometheus.official.yml:/etc/prometheus/prometheus.yml:ro
+      - ./ops/prometheus/alerts.official.yml:/etc/prometheus/alerts.yml:ro
+      - r16_prometheus_data:/prometheus
+    secrets: [official_metrics_token]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    networks: [r16_private]
+    ports: ["127.0.0.1:19092:9090"]
+  official_grafana:
+    image: grafana/grafana:11.3.0
+    restart: unless-stopped
+    depends_on: [official_prometheus]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${OFFICIAL_GRAFANA_ADMIN_PASSWORD:?Generate private local credentials first}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
+    volumes:
+      - ./ops/grafana/provisioning-official:/etc/grafana/provisioning:ro
+      - ./ops/grafana/dashboards-original:/var/lib/grafana/dashboards:ro
+      - r16_grafana_data:/var/lib/grafana
+    networks: [r16_private]
+    ports: ["127.0.0.1:13001:3000"]
+secrets:
+  official_metrics_token:
+    file: ./.local/official_metrics_token
+networks:
+  r16_private:
+    driver: bridge
+  firebase_existing:
+    external: true
+    name: ${R16_FIREBASE_NETWORK:?Inspect the owned local emulator network first}
+volumes:
+  r16_prometheus_data:
+  r16_grafana_data:

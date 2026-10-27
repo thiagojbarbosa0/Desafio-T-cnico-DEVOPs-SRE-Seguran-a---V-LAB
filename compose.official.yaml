@@ -1,0 +1,66 @@
+name: coursesphere-official-local
+# OPTIONAL local-only stack for the ORIGINAL Flask+React app. It does not
+# replace compose.yaml (which demonstrates the separate synthetic SRE lab).
+# Authentication/write operations need user's own authorized Firebase
+# credentials or separately running local Firebase Emulators; neither is
+# provisioned by this compose file. Without them, only public routes work.
+x-flask-environment: &flask_environment
+  ALLOWED_ORIGINS: ${OFFICIAL_ALLOWED_ORIGINS:-http://localhost:8081}
+  COURSESPHERE_USE_FIREBASE_EMULATORS: '0'
+  PYTHONDONTWRITEBYTECODE: '1'
+  COURSESPHERE_TRUST_GATEWAY_REQUEST_ID: '1'
+x-flask: &flask
+  build:
+    context: .
+    dockerfile: backend/Dockerfile.official
+  restart: unless-stopped
+  environment: *flask_environment
+  read_only: true
+  tmpfs: ["/tmp:size=16m,mode=1777"]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 80
+  mem_limit: 300m
+  networks: [official_private]
+services:
+  official_api_a:
+    <<: *flask
+    environment:
+      <<: *flask_environment
+      COURSESPHERE_REPLICA_NAME: official_api_a
+  official_api_b:
+    <<: *flask
+    environment:
+      <<: *flask_environment
+      COURSESPHERE_REPLICA_NAME: official_api_b
+  official_frontend:
+    user: nginx
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.official
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:size=16m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [official_private]
+  official_gateway:
+    user: nginx
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      official_api_a: {condition: service_healthy}
+      official_api_b: {condition: service_healthy}
+      official_frontend: {condition: service_healthy}
+    ports: ['127.0.0.1:8081:8081']
+    volumes:
+      - ./ops/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ops/nginx/gateway.official.conf:/etc/nginx/conf.d/default.conf:ro
+    read_only: true
+    tmpfs: ["/tmp:size=16m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [official_private]
+networks:
+  official_private:
+    driver: bridge

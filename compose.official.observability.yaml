@@ -1,0 +1,53 @@
+# Optional overlay for the ORIGINAL Flask stack, never the synthetic CRUD lab.
+# Use scripts/start_official_observability_v19_8.sh (generates local secrets).
+# Both Flask replicas are scraped directly, NOT through the Nginx gateway.
+services:
+  official_api_a:
+    environment:
+      COURSESPHERE_METRICS_ENABLED: '1'
+      COURSESPHERE_METRICS_TOKEN_FILE: /run/secrets/official_metrics_token
+    secrets: [official_metrics_token]
+  official_api_b:
+    environment:
+      COURSESPHERE_METRICS_ENABLED: '1'
+      COURSESPHERE_METRICS_TOKEN_FILE: /run/secrets/official_metrics_token
+    secrets: [official_metrics_token]
+  official_prometheus:
+    image: prom/prometheus:v2.55.1
+    profiles: [observability]
+    restart: unless-stopped
+    depends_on:
+      official_api_a: {condition: service_healthy}
+      official_api_b: {condition: service_healthy}
+    command: ['--config.file=/etc/prometheus/prometheus.yml', '--storage.tsdb.path=/prometheus']
+    volumes:
+      - ./ops/prometheus/prometheus.official.yml:/etc/prometheus/prometheus.yml:ro
+      - ./ops/prometheus/alerts.official.yml:/etc/prometheus/alerts.yml:ro
+      - official_prometheus_data:/prometheus
+    secrets: [official_metrics_token]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [official_private]
+    ports: ['127.0.0.1:9092:9090']
+  official_grafana:
+    image: grafana/grafana:11.3.0
+    profiles: [observability]
+    restart: unless-stopped
+    depends_on: [official_prometheus]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${OFFICIAL_GRAFANA_ADMIN_PASSWORD:?Use scripts/start_official_observability_v19_8.sh}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
+    volumes:
+      - ./ops/grafana/provisioning-official:/etc/grafana/provisioning:ro
+      - ./ops/grafana/dashboards-original:/var/lib/grafana/dashboards:ro
+      - official_grafana_data:/var/lib/grafana
+    networks: [official_private]
+    ports: ['127.0.0.1:3001:3000']
+secrets:
+  official_metrics_token:
+    file: ./.local/official_metrics_token
+volumes:
+  official_prometheus_data:
+  official_grafana_data:
