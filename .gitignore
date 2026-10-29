@@ -23,3 +23,14 @@ frontend/dist/
 *.key
 # Third-party API credentials included in the upstream snapshot: NEVER COMMIT
 **/reddit_key.json
+
+# Arquivos não distribuídos na versão final
+backend/cornell-course-sphere-data/
+frontend/dist/
+frontend/node_modules/
+.local/
+.env
+.env.*
+evidence/
+reports/
+*.zip

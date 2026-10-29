@@ -1,9 +1,6 @@
-# Política de segurança do laboratório
+# Segurança
 
-Use exclusivamente projetos Firebase de demonstração e emuladores locais para testes.
-Nunca envie credenciais, `.env`, tokens de sessão, logs privados, bases reais ou
-relatórios de exploração sensíveis para o GitHub.
-
-As provas Docker da R16 continuam dependentes de execução no ambiente Fedora.
-Achados de vulnerabilidade devem ser reportados responsavelmente ao mantenedor,
-não publicados com tokens ou instruções direcionadas a sistemas de terceiros.
+Use o Firebase Emulator somente em projeto `demo-*` e exposto no loopback.
+Não publique tokens, arquivos `.env`, service accounts ou evidências identificáveis.
+Os endpoints de métricas devem permanecer restritos à rede interna.
+Avalie dependências e faça validação integrada antes de implantação pública.
