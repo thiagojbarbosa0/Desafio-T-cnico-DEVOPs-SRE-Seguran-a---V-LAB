@@ -1,0 +1,25 @@
+CourseSphere V13 - STATUS EM 23/10/2026
+
+PREPARAÇÃO/IMPLEMENTAÇÃO: ~60% (estimativa de engenharia, não nota).
+ACEITE COMPROVADO: 15% ponderado (2/8 gates), com prioridade aos critérios altos do edital.
+
+OK NA SESSÃO:
+- 139 testes Python offline aprovaram.
+- Nginx nativo: 20 requisições/replica, 8/8 respostas após desligar uma instância.
+- Novos testes do coletor Prometheus e do gate de integridade.
+
+IMPLEMENTADO, MAS SEM EXECUÇÃO INTEGRADA:
+- Flask original: métricas por rota/status/latência e /metrics loopback opt-in.
+- 15 cenários HTTP antes/depois com Flask real e Firebase sintético.
+- 19 cenários Firebase Auth/RTDB Emulator.
+- Docker Compose (2 réplicas) + Prometheus/Grafana, React build e CI online.
+
+NÃO CONCLUÍDO:
+- Provar 5 vulnerabilidades ativas do original e 3 correções com evidências HTTP integradas.
+- Confirmar licença/permissão para publicar derivado e rotação de segredo upstream.
+- Execução real de Flask/Firebase, React, Docker/Grafana e CI/GitHub.
+
+COMANDO INICIAL: bash scripts/verify_v13.sh
+AUTOMATIZADOR FEDORA: bash scripts/fedora_validation_v13.sh --install-deps [--with-docker]
+HANDOFF: HANDOFF_MESTRE_V13.md
+EVIDÊNCIAS: evidence/generated/RELEASE_GATE_V13.json

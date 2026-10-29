@@ -1,0 +1,55 @@
+{
+  "release": "CourseSphere R14 - DERIVED from V19.9/R13; NOT V19.15",
+  "created_utc": "2026-10-27T10:52:03.950853+00:00",
+  "source": "R13 complete ZIP with authenticated scoped emulator cleanup improvements",
+  "python_regressions": {
+    "executed": 807,
+    "passed": 807,
+    "new_vs_R13": 51
+  },
+  "node_session_checks": {
+    "passed": 3,
+    "attempted": 3
+  },
+  "native_nginx_checks": {
+    "passed": 2,
+    "attempted": 2,
+    "upstreams": "synthetic; not original Flask/Firebase"
+  },
+  "typescript_syntax": "pass (offline syntax only; Vite production build not re-executed)",
+  "npm_lock_structure": {
+    "validated": true,
+    "packages": 412,
+    "not_equivalent_to_npm_audit": true
+  },
+  "frontend_npm_ci_and_production_build_this_session": "not_executed",
+  "firebase_flask_emulator_integration_this_session": "not_executed",
+  "docker_prometheus_grafana_this_session": "not_executed",
+  "v19_15_checkout_integration": false,
+  "r14_evidence_gate": {
+    "weighted_percent_derived": 22,
+    "integrated_fixture_cleanup": false,
+    "ready_for_submission": false,
+    "strict_without_evidence": "blocked_as_expected"
+  },
+  "replayed_patch_files": 18,
+  "changed_paths": [
+    ".github/workflows/ci.yml",
+    "COMECE_POR_AQUI_R14.md",
+    "HANDOFF_R14_2026_10_27.md",
+    "README.md",
+    "integration/emulator_fixture_cleanup_r14.py",
+    "integration/run_r13_two_replica_quota.py",
+    "integration/test_official_emulators.py",
+    "scripts/diagnostico_total_r13.py",
+    "scripts/release_gate_r14.py",
+    "scripts/verify_official_replica_quota_r11.py",
+    "tests/test_emulator_suite_v11.py",
+    "tests/test_r13_emulator_orchestrator.py",
+    "tests/test_r13_emulator_teardown.py",
+    "tests/test_r14_official_emulator_fixture_scope.py",
+    "tests/test_r14_proof_fail_closed.py",
+    "tests/test_r14_release_gate.py",
+    "tests/test_r14_scoped_fixture_cleanup.py"
+  ]
+}

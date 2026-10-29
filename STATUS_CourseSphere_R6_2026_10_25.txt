@@ -1,0 +1,18 @@
+COURSESPHERE V-LAB — R6, derivada da V19.9, 25/10/2026
+
+BASE: R5 completa recuperada, NÃO o checkout principal V19.15.
+FUNCIONAL: proteção de configuração Firebase/emulador; validação do app global;
+           gate de observabilidade evita contradições entre réplicas;
+           hashes Auth/RTDB, executor e Prometheus protegidos.
+TESTES EXECUTADOS NESTE AMBIENTE:
+  Python offline: 518/518 PASSED (R5: 492; 26 novos)
+  Node sessão/perfil/chats: 3/3 PASSED
+  Nginx original e Nginx SRE com upstreams simulados: 2/2 PASSED
+  npm lockfile estrutural: PASS, NÃO CVE audit
+  Firebase SDK: apenas simulado; NO REAL NETWORK
+PENDENTES: Flask HTTP completo, Firebase Emulator, Docker integrado,
+           build React atual, triagem CVE, validação humana 5 achados/3 correções,
+           licença/publicação/rotação upstream.
+GATE BASE R6: 22/100; V19.15 não reexecutada.
+AVISO: Evidência que não corresponde aos hashes da fonte atual é histórica,
+       não aceite atual. Não divulgar credenciais ou iniciar serviços públicos.

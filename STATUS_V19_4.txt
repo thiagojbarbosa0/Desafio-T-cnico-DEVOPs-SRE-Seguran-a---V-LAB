@@ -1,0 +1,32 @@
+COURSESPHERE V19.4 — STATUS CONFERIDO
+
+Implementação estimada: 69% (avaliação qualitativa).
+Aceite interno comprovado: 15% (2/8 critérios).
+Não representa nota ou probabilidade de aprovação.
+
+EXECUTADOS E APROVADOS NESTA SESSÃO:
+- 262/262 testes Python offline, incluindo 22 novos.
+- Nginx real em ambiente sintético: distribuição 20/20 e 8/8 após queda de uma réplica.
+- Nginx: bloqueio de query string e logs JSON sem parâmetros, 55 entradas verificadas.
+- 3 testes Node de isolamento de sessão.
+- Sintaxe YAML do GitHub Actions, sintaxe Python e preflight de segredos por padrões.
+
+NÃO EXECUTADOS NESTA SESSÃO:
+- Novos 7 casos Flask WSGI (Flask ausente): runner retorna false e não simula PASS.
+- Firebase Emulator com 23 casos, incluindo duas novas quotas dentro do caso 20.
+- Build completo React atual, Docker/Grafana/Prometheus, pipeline hospedado no GitHub.
+
+CORREÇÕES DESTA VERSÃO:
+- GitHub Actions executa corretamente as duas linhas da prova Flask/Nginx.
+- Quotas RTDB transacionais para alterar perfil e excluir chats.
+- Logs e contadores de autenticação limitados a sucesso/negação, sem UID/token.
+- Critérios de evidência com hash atualizado e rejeição de SKIPs.
+
+PRÓXIMA AÇÃO QUANDO O FEDORA ESTIVER DISPONÍVEL:
+  bash scripts/verify_local_v19_4.sh
+  bash scripts/verify_official_emulators.sh
+  bash scripts/verify_frontend_build_v14_2.sh
+
+PARA A BANCA: cinco achados originais independentes e três correções comprováveis
+continuam como pendência principal, além de revisão de permissão de publicação.
+Leia HANDOFF_V19_4.md e docs/RELATORIO_APPSEC_V19_4.md.

@@ -1,0 +1,25 @@
+CourseSphere R5 (derivada de V19.9 R4) — 25 outubro 2026
+IMPORTANTE: a V19.15 original permanece prioritária e não foi modificada.
+
+MELHORIA: a coleta privada Prometheus de /metrics agora sonda Firebase Auth+RTDB
+nas duas réplicas e exporta coursesphere_original_firebase_ready {1 ou 0}.
+Dois alertas detectam indisponibilidade e a ausência de telemetria em imagem antiga.
+Dashboard Grafana e verificador integrados. Opção --require-ready foi adicionada.
+
+NOVA EXECUÇÃO NESTA SESSÃO:
+- 492/492 testes Python aprovados (base R4: 478; 14 adicionais).
+- 3 scripts Node de isolamento aprovados.
+- 2 provas Nginx real aprovadas, apenas com upstreams sintéticos.
+- CI/Prometheus/Grafana YAML e dashboard JSON analisados estruturalmente.
+- 368 arquivos de texto inspecionados pelo scanner com 0 alertas de padrões.
+- Suite HTTP Flask integrada preparada com 9 casos: todos SKIPPED neste host
+  por ausência de Flask/Flask-Cors; runner marcou validated=false e saiu 1.
+- Docker + Firebase Emulator + Prometheus/Grafana runtime NÃO executados.
+- Auditoria de evidências: 2/7 hashes consistentes; 5/7 desatualizados.
+- Gate derivado conservador: 22/100 (3/8). Não é nota nem prova V19.15.
+
+P0: merge seletivo com fonte real V19.15; rebuild+runtime attestation; Auth/RTDB
+com quota 20/21, duas réplicas e failover; SLO Grafana/Prometheus; 5 achados
+upstream + 3 correções; autorização de redistribuição e rotação privada.
+
+Referência: HANDOFF_R5_2026_10_25.md e docs/READINESS_AUTOMATIZADA_R5.md.

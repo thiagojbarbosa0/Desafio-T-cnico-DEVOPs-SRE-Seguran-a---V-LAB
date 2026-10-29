@@ -1,0 +1,16 @@
+CourseSphere V-Lab — checkpoint R4, 25/10/2026
+Fonte: cópia V19.9 R3 realmente recuperada; R4 derivada, NÃO V19.15.
+
+ALTERAÇÕES: liveness vs readiness Firebase Auth/RTDB; cache fail-closed;
+Nginx /ready; SLIs sem sondagens sintéticas; regra/painel readiness;
+runner HTTP Flask sintético, smoke test localhost, gate de evidências honesto.
+
+EM EXECUÇÃO NESTA SESSÃO: suíte Python offline, verificações Node e Nginx
+real com upstreams sintéticos. Contagem 478/478; hashes finais: ver HANDOFF_R4_2026_10_25.md e manifesto.
+
+NÃO EXECUTADO AQUI: Firebase SDK real; Flask HTTP (bibliotecas ausentes);
+Docker/Compose + Firebase Emulator; React npm build; Grafana runtime integrado.
+Reprovação intencional de HTTP sem Flask: 5 casos SKIPPED e status 1.
+
+ACEITE: R4 não recebe crédito extra sem revalidar evidências por hash.
+A V19.15 permanece a linha principal para integração seletiva.

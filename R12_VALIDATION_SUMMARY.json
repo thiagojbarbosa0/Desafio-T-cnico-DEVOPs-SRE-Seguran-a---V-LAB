@@ -1,0 +1,32 @@
+{
+  "version": "CourseSphere V19.9-derived R12",
+  "created_utc": "2026-10-26T18:04:57.290530+00:00",
+  "base": "CourseSphere_V19_9_R11_CODIGO_COMPLETO.zip",
+  "main_V19_15_integrated": false,
+  "new_capabilities": [
+    "strict JSON ingress for original Flask authenticated write/query routes",
+    "R12 offline source-bound evidence and fail-closed release check",
+    "CI real Flask HTTP protocol tests with mocked Firebase",
+    "strict parser bound into R11 distributed-quota source attestation"
+  ],
+  "python_tests_run": 722,
+  "python_tests_passed": 722,
+  "new_python_tests": 31,
+  "offline_r12_parser_tests": 22,
+  "r12_gate_adversarial_tests": 9,
+  "http_flask_r12_tests_prepared": 8,
+  "http_flask_r12_tests_executed_locally": 0,
+  "nginx_native_test": "pass; mocked upstream services only",
+  "nginx_official_contract_test": "pass; mocked upstream services only",
+  "r8_r9_r10_synthetic_proofs": "pass; zero integrated Firebase claim",
+  "weighted_acceptance_percent_derived": 22,
+  "ready_for_submission": false,
+  "firebase_docker_integration": "not executed",
+  "v19_15_integration": "not executed",
+  "limitations": [
+    "No Flask/Flask-Cors package in current execution environment",
+    "No Docker daemon available",
+    "No complete V19.15 source checkout available",
+    "Source hash change invalidates previous original Flask/Firebase runtime evidence"
+  ]
+}

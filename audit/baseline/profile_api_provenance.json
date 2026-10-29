@@ -1,0 +1,6 @@
+{
+  "source_zip_sha256": "1ba5268f5fcfddd9c87cb550e807a36d3eabf7ef91be97d829a6cca8b8659a2d",
+  "member": "CourseSphere-main/frontend/src/api.ts",
+  "file_sha256": "be635b327da40ab28eeff13381757ec0b13ddcc9e993b02ced11b4bed2032475",
+  "scope": "Byte-identical upstream API; no credentials/configuration copied"
+}

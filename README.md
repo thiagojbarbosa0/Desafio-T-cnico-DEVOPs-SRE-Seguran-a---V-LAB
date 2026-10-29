@@ -1,60 +1,96 @@
-# CourseSphere — Desafio Técnico DevOps / SRE / Segurança (V-Lab)
+# Atualização R14 (derivada da V19.9; não substitui V19.15)
 
-Laboratório de engenharia de segurança e confiabilidade aplicado a uma aplicação
-**Flask + React**, com autenticação e banco de dados Firebase (emuladores para testes),
-Docker Compose, Nginx, Prometheus e Grafana.
+Leia primeiro **[COMECE_POR_AQUI_R14.md](COMECE_POR_AQUI_R14.md)**. A R14 adiciona limpeza segura de fixtures Firebase e gate com atestado estrito; veja [HANDOFF_R14_2026_10_27.md](HANDOFF_R14_2026_10_27.md).
 
-> **Status:** versão de trabalho **R16 Docker Pilot**, derivada da R15 Work / R14.
-> Não equivale à fonte histórica **V19.15** integralmente consolidada.
-> O Docker piloto precisa de validação final no ambiente Fedora; não está homologado.
+---
 
-## Arquitetura
+# CourseSphere AppSec/SRE — versão V19.8
 
-- **`backend/`**: API Flask, validação, quotas, métricas e conectores Firebase.
-- **`frontend/`**: aplicação React/TypeScript e build Vite.
-- **`ops/`**: configurações Nginx, Prometheus, Grafana e regras Firebase.
-- **`integration/`, `tests/`**: provas e regressões automatizadas.
-- **`scripts/`**: verificadores, ferramentas de execução e release gates.
-- **`dashboard/`**: dashboard didático independente.
-- **`docs/`**: documentação arquitetural e operacional selecionada.
+**Início:** [README_V19_8_COMECE_AQUI.md](README_V19_8_COMECE_AQUI.md) — [Handoff V19.8](HANDOFF_V19_8.md) — [Observabilidade do Flask original](docs/OBSERVABILIDADE_ORIGINAL_V19_8.md).
 
-## Verificação de código (sem alterar outros contêineres)
+A camada original Flask/React e a sandbox didática são independentes. Provas Docker/Flask/Firebase não executadas permanecem pendentes.
+
+---
+
+# CourseSphere — V19.6 (ponto de entrada atual)
+
+**Leia primeiro [`README_V19_6_COMECE_AQUI.md`](README_V19_6_COMECE_AQUI.md) e [`HANDOFF_V19_6.md`](HANDOFF_V19_6.md).** O texto abaixo documenta versões anteriores; não representa o estado de validação de V19.6.
+
+---
+
+# CourseSphere — V19.4 (AppSec & SRE)
+
+**Estado atual:** versão derivada do repositório oficial, para análise e hardening em laboratório autorizado.
+
+**Comece por [`HANDOFF_V19_4.md`](HANDOFF_V19_4.md)** e [`COMECE_AQUI_V19_4.txt`](COMECE_AQUI_V19_4.txt). Os relatórios e handoffs de V7–V19.3 continuam como material histórico, não substituem o estado atual.
+
+V19.4 corrige um bloqueio real do GitHub Actions, protege gravações adicionais com quotas distribuídas e adiciona auditoria de autenticação sem PII. A suíte offline testa funções com Firebase sintético; Flask, Firebase Emulator, React build e Docker/Grafana exigem provas próprias.
 
 ```bash
-python3 -m unittest discover -s tests -v
-cd frontend && npm ci && npm run build
+bash scripts/verify_local_v19_4.sh
 ```
 
-Alguns testes históricos pressupõem dados/evidências excluídos desta cópia pública e podem ser ignorados ou falhar sem esses insumos.
-Os testes de integração Firebase requerem **somente emuladores locais de demonstração**.
-Veja [`COMECE_AQUI_R16.md`](COMECE_AQUI_R16.md) para o piloto Docker isolado e seus pré-requisitos.
-**Não** execute o Compose contra instâncias Firebase reais sem revisar a configuração.
+O laboratório independente de cursos/aulas NÃO deve ser confundido com o backend Flask original. Não copiar credenciais upstream, não publicar a aplicação vulnerável e não alegar exploração real de serviços externos.
 
-## Estado das provas
+---
 
-- Regressão offline R16: 821 testes aprovados na preparação da entrega.
-- Flask + emuladores Auth/RTDB e quota em duas réplicas: comprovados em testes locais.
-- Build React e testes Node: aprovados nos checkpoints prévios.
-- **Docker R16 integrado / Grafana / failover containerizado: pendente de evidência final.**
-- Avaliação de cinco achados upstream e tratamento dos alertas npm restantes: pendentes.
+# CourseSphere — V19.3 (continuação V-Lab AppSec/SRE)
 
-Estes números são históricos; uma alteração de código exige nova execução e novas evidências.
+**Comece por [`HANDOFF_V19_3.md`](HANDOFF_V19_3.md) e [`COMECE_AQUI_V19_3.txt`](COMECE_AQUI_V19_3.txt).**
 
-## Segurança e dados
+O trabalho continua do CourseSphere oficial (Flask/React/Firebase) e do laboratório AppSec/SRE sintético separado. Não é um sistema novo substituto. **A entrega ainda não tem todas as provas integradas para submissão.**
 
-Este repositório contém **código e configuração de demonstração**, não deve conter
-`.env`, chaves, tokens, contas reais, logs privados, históricos completos de execução
-ou dados coletados de terceiros. O conjunto `backend/cornell-course-sphere-data/`
-foi **intencionalmente excluído**: obtenha dados de exemplo autorizados de forma separada,
-se algum fluxo do aplicativo depender deles.
+A V19.3 acrescenta logs Nginx JSON sem query string, bloqueio de tokens por URL e novas provas locais. A decisão técnica está em [`docs/ADR_NGINX_LOG_PRIVACY_V19_3.md`](docs/ADR_NGINX_LOG_PRIVACY_V19_3.md).
 
-Resultados privados devem permanecer fora do Git, em
-`~/V-Lab DevOps/CourseSphere_EVIDENCIAS/`.
+---
 
-## Origem, autoria e licença
+> **Continuidade V19.2 (após ChatGPT Work):** leia primeiro [`docs/HANDOFF_WORK_V19_2.md`](docs/HANDOFF_WORK_V19_2.md). O frontend recebeu proteção contra respostas antigas após troca de usuário/logout. O build React V19.2 ainda precisa ser executado, e os testes adicionais estão no CI. O relatório antigo de 42% vale para V19.1, não para a V19.2 alterada.
 
-Projeto derivado de [LambdaAK/CourseSphere](https://github.com/LambdaAK/CourseSphere),
-com adaptações para fins de avaliação AppSec/SRE. Preserve a atribuição dos autores
-originais. **Não há licença de redistribuição verificada neste snapshot.** Confirme a
-permissão aplicável antes de manter este repositório público. Nenhuma nova licença é
-concedida implicitamente por este README.
+> **Versão corrente: V19.** Comece por [README_V19_COMECE_AQUI.md](README_V19_COMECE_AQUI.md) e [HANDOFF_MESTRE_V19.md](HANDOFF_MESTRE_V19.md). Material V7–V18 é histórico, não roteiro atual.
+
+# CourseSphere — V-Lab AppSec & SRE (V18)
+
+Esta entrega deriva do **CourseSphere original**, não substitui sua identidade nem demonstra ataques a um serviço em produção.
+
+**Início rápido:** leia [`README_V18_COMECE_AQUI.md`](README_V18_COMECE_AQUI.md) e [`HANDOFF_MESTRE_V18.md`](HANDOFF_MESTRE_V18.md).
+
+- **Aplicação upstream:** React/TypeScript + Flask + Firebase Auth/Realtime Database e SQLite.
+- **Laboratório:** Python padrão + SQLite sintéticos e dashboard convencional.
+- **Objetivo de avaliação:** cinco falhas reais/reproduzíveis, três correções de causa raiz, hardening, observabilidade e infraestrutura com evidências.
+- **Estado:** V18 ainda NÃO está aprovada para submissão; as integrações com emuladores, React e Docker necessitam de testes em ambiente completo.
+
+`bash scripts/verify_v18.sh` executa o que é testável offline, sem instalações externas.
+
+## Atualização V19.5 — evidências de exposição de segredo upstream
+
+Foi acrescentado o achado **F04** (material de credenciais presente no snapshot original), reproduzível por inspeção **local** e documentado em `docs/RELATORIO_APPSEC_V19_5.md`. Nenhum segredo foi copiado para o pacote; sua validade externa não foi testada. O comando `bash scripts/verify_local_v19_5.sh` executa os testes disponíveis, sem chamar serviços reais dos autores. **O projeto ainda não está pronto para publicação ou submissão definitiva.**
+
+## V19.7 — optional ORIGINAL Flask/React Docker stack
+
+This project provides **two distinct stacks**. `compose.yaml` runs the separate,
+synthetic teaching sandbox. `compose.official.yaml` instead runs **two Gunicorn
+instances of the patched original Flask API**, the React frontend, and a local
+Nginx gateway. Read `docs/STACK_FLASK_ORIGINAL_V19_7.md` before using the latter.
+The original Compose profile serves health and frontend without production
+credentials, but Firebase-backed account operations require a separate authorized
+emulator/integration setup. It is **not** a substitute for those tests or the
+Prometheus/Grafana demo profile.
+
+Native gateway contract validation (needs only Python standard library and Nginx):
+
+```bash
+python3 scripts/prove_official_nginx_contract_v19_7.py
+```
+
+To attempt the real original Docker stack, on a host with Docker and network
+access for first builds:
+
+```bash
+docker compose -f compose.official.yaml up -d --build
+python3 scripts/verify_official_docker_v19_7.py --failover
+docker compose -f compose.official.yaml down --remove-orphans
+```
+
+All processes/ports bind to localhost by default. Never provide the upstream
+authors' credentials to this demonstration. `docs/STACK_FLASK_ORIGINAL_V19_7.md`
+explains the scope, limits, expected evidence and recovery.

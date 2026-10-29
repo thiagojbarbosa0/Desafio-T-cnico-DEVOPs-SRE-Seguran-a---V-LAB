@@ -1,0 +1,27 @@
+{
+  "version": "R10 derivative from V19.9, NOT V19.15",
+  "source": "CourseSphere_V19_9_R9_CODIGO_COMPLETO.zip",
+  "validated_test_count": 670,
+  "python_suite": "670/670 passed on development checkout",
+  "additional_tests_vs_r9": 27,
+  "node_session_tests": 3,
+  "nginx_native_proofs": 2,
+  "r10_tcp_checks": {
+    "two_replicas_alive": true,
+    "trickling_headers_terminated": true,
+    "trickling_body_returns_408": true,
+    "authenticated_slow_write_denied": true,
+    "no_orphan_mutation_or_audit": true,
+    "both_replicas_recovered": true,
+    "shared_store_unchanged": true
+  },
+  "r10_proof_current": true,
+  "r9_proof_current": true,
+  "r8_proof_current": true,
+  "release_gate_internal_points": 22,
+  "release_gate_passed": 3,
+  "release_gate_total": 8,
+  "ready_for_submission": false,
+  "not_executed": "V19.15 integrated Flask/Firebase/Docker/Prometheus/Grafana; full frontend production build",
+  "scope": "Python synthetic lab; Nginx native with synthetic upstreams; no real Firebase auth proof"
+}

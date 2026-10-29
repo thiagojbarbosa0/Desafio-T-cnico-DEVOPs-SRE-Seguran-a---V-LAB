@@ -1,0 +1,24 @@
+CourseSphere V14.1 — correção do teste HTTP
+
+O que foi corrigido
+- integration/test_original_http_stubbed.py: o teste test_backend_happy_path_preserved passa a verificar cada versão pelo seu fluxo de autenticação suportado.
+- Na versão original o token é enviado na query string; na corrigida, somente por Authorization: Bearer.
+- Também confere que a versão corrigida rejeita token na URL (401), mesmo se houver cabeçalho Bearer.
+- Não alteramos o backend nem outras funcionalidades. Todos os outros arquivos são os mesmos da V14.
+
+Como testar no Fedora
+1. Extraia este ZIP em uma nova pasta; entre na pasta CourseSphere_V14.
+2. Na mesma pasta, execute:
+   .venv/bin/python -m integration.run_original_http_stubbed
+   (se .venv não estiver presente, veja opção alternativa abaixo)
+3. Resultado esperado: Ran 15 tests, OK, validated=True.
+
+Opção sem .venv pronto:
+   python3 -m venv .venv
+   .venv/bin/python -m pip install 'Flask>=3,<4' 'Flask-Cors>=4,<6'
+   .venv/bin/python -m integration.run_original_http_stubbed
+
+O script de validação completo continua disponível:
+   bash scripts/fedora_validation_v14.sh --install-deps --with-docker
+
+Observação: testes de Flask/Firebase simulados não substituem validação com emuladores oficiais ou com os serviços reais.

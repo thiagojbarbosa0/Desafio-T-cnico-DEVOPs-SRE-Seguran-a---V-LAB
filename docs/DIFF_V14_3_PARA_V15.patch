@@ -1,0 +1,187 @@
+--- V14.3/frontend/src/api.ts
++++ V15/frontend/src/api.ts
+@@ -53,7 +53,7 @@
+  * @param setCollege 
+  * @param setCourses 
+  */
+-async function setProfileInfoIfLoggedIn(
++function setProfileInfoIfLoggedIn(
+   setMajors: Function,
+   setMinors: Function,
+   setYear: Function,
+@@ -61,11 +61,10 @@
+   setCourses: Function,
+   setAbout: Function
+ ){
+-  onAuthStateChanged(auth, async (user) => {
++  return onAuthStateChanged(auth, async (user) => {
+     if (!user) return;
+-    const idToken = await user.getIdToken()
+-
+     try {
++      const idToken = await user.getIdToken();
+       const response = await fetch(apiUrl('/users/info'), {
+         method: "GET",
+         headers: {
+@@ -74,7 +73,11 @@
+         }
+       })
+ 
+-      const data = await response.json()
++      if (!response.ok) throw new Error('Profile request failed');
++      const data = await response.json();
++      // A newly registered user legitimately has no saved profile yet.
++      if (data === null) return;
++      if (!data || typeof data !== 'object') throw new Error('Invalid profile data');
+ 
+       if (data["majors"]) {
+         setMajors(data["majors"])
+@@ -102,7 +105,7 @@
+ 
+     }
+     catch (e) {
+-      toast.error(`Failed to fetch data: ${e}`)
++      toast.error('Não foi possível carregar o perfil.')
+     }
+ })
+ }
+@@ -154,39 +157,30 @@
+  * @param query 
+  * @returns 
+  */
+-async function fetchCourseSphereResponse(query: string) {
+-  const user = auth.currentUser;
+-  if (!user) {
+-    toast.error("Entre na sua conta para pesquisar disciplinas.");
+-    return { botResponse: "Faça login para continuar.", newRecommendations: [] };
++// Never convert API/network failures into a normal bot message. Doing so would
++// silently persist outages as apparently genuine course recommendations.
++type RecommendationReply = { botResponse: string; newRecommendations: unknown[] };
++async function fetchCourseSphereResponse(query: string): Promise<RecommendationReply> {
++  const user = auth.currentUser;
++  if (!user) throw new Error('Authentication required');
++  const idToken = await user.getIdToken();
++  const response = await fetch(apiUrl('/users/query'), {
++    method: 'POST',
++    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
++    body: JSON.stringify({ query }),
++  });
++  if (!response.ok) throw new Error(`CourseSphere API failed (HTTP ${response.status})`);
++  const payload: unknown = await response.json();
++  if (!payload || typeof payload !== 'object') throw new Error('Invalid API response');
++  const result = payload as Record<string, unknown>;
++  if (typeof result.botResponse !== 'string' || !result.botResponse.trim() ||
++      !Array.isArray(result.newRecommendations)) {
++    throw new Error('Invalid API response');
+   }
+-  const idToken = await user.getIdToken();
+-  const data = { query };
+-  const response = await fetch(apiUrl('/users/query'), {
+-    method: "POST",
+-    headers: {
+-      "Content-Type": "application/json",
+-      'Authorization': `Bearer ${idToken}`
+-    },
+-    body: JSON.stringify(data)
+-  })
+-  .then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); })
+-  .then(result => {
+-    toast.success("Successfully retrieved bot response!");
+-    return {
+-      botResponse: result.botResponse,
+-      newRecommendations: result.newRecommendations || []
+-    };
+-  })
+-  .catch((error: Error) => {
+-    console.error("Failed to fetch bot response:", error);
+-    toast.error(`Failed to fetch bot response: ${error.message}`);
+-    return {
+-      botResponse: "Não foi possível obter recomendações. Tente novamente.",
+-      newRecommendations: []
+-    };
+-  });
+-  return response;
++  return {
++    botResponse: result.botResponse,
++    newRecommendations: result.newRecommendations,
++  };
+ }
+ 
+ function ensureUserLoggedIn(): boolean {
+--- V14.3/frontend/src/components/ChatInterface/ChatInterface.tsx
++++ V15/frontend/src/components/ChatInterface/ChatInterface.tsx
+@@ -12,6 +12,7 @@
+   const [lines, setLines] = useState<ChatLine[]>([]);
+   const [sending, setSending] = useState(false);
+   const [saveError, setSaveError] = useState(false);
++  const [replyError, setReplyError] = useState(false);
+   const [notice, setNotice] = useState('');
+   // Never reuse a hard-coded ID across distinct conversations/users.
+   const chatId = useRef(`chat_${messageId()}`);
+@@ -22,6 +23,7 @@
+     if (!text || sending) return;
+     setSending(true);
+     setSaveError(false);
++    setReplyError(false);
+     setNotice('');
+     setQuery('');
+     const userMessage: ChatLine = {
+@@ -34,14 +36,18 @@
+         sender: 'bot', content: botResponse, messageID: messageId(), timestamp: new Date().toISOString(),
+       };
+       setLines((current) => [...current, botMessage]);
+-      // Persist immediately. Waiting for browser unload would not reliably persist pending messages.
+-      await saveCourseSphereChat(chatId.current, [userMessage, botMessage]);
++      // Persist immediately. A failed save is NOT a failed recommendation request.
++      try {
++        await saveCourseSphereChat(chatId.current, [userMessage, botMessage]);
++      } catch {
++        setSaveError(true);
++      }
+       if (newRecommendations.length) {
+         setNotice(`${newRecommendations.length} sugestão(ões) retornada(s).`);
+       }
+     } catch {
+-      // A local message is still visible even when its persistence fails.
+-      setSaveError(true);
++      // Do not fabricate an assistant response on an API outage or invalid payload.
++      setReplyError(true);
+     } finally {
+       setSending(false);
+     }
+@@ -73,6 +79,9 @@
+           {sending && <CircularProgress size={20} aria-label="Processando resposta" />}
+         </Box>
+         {notice && <Alert severity="info">{notice}</Alert>}
++        {replyError && <Alert severity="error" role="alert">
++          Não foi possível consultar as recomendações. Tente novamente.
++        </Alert>}
+         {saveError && <Alert severity="warning" role="status">
+           Não foi possível salvar esta conversa. O conteúdo permanece nesta aba.
+         </Alert>}
+--- V14.3/frontend/src/pages/dashboard/Dashboard.tsx
++++ V15/frontend/src/pages/dashboard/Dashboard.tsx
+@@ -222,11 +222,9 @@
+       <Typography variant="h6">Tell me about yourself</Typography>
+       <Typography 
+       variant="body2" sx={{ marginBottom: 2 }}>
+-        This will be used to create a personalized experience. Our model will
+-        extract relevant insights from this text to steer our AI to make more
+-        targetted recommendations. Please fill this in concisely and
+-        responsibly. Pricing is based on the length and how often you update
+-        this field.
++        Conte um pouco sobre seus interesses acadêmicos. Essas informações
++        ficam no seu perfil e ajudam a organizar suas preferências.
++        O mecanismo de recomendações deste ambiente ainda é demonstrativo.
+       </Typography>
+       <TextField
+         id = "info-output"
+@@ -261,7 +259,7 @@
+   const [about, setAbout] = useState<string>("");
+ 
+   useEffect(() => {
+-      setProfileInfoIfLoggedIn(
++      return setProfileInfoIfLoggedIn(
+         setMajors,
+         setMinors,
+         setYear,

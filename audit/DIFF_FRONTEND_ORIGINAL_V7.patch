@@ -1,0 +1,188 @@
+--- audit/baseline/api_original.txt	2026-10-22 21:28:39.366462372 +0000
++++ frontend/src/api.ts	2026-10-22 21:27:13.586940624 +0000
+@@ -2,51 +2,30 @@
+ import firebaseConfig from "./firebaseConfig";
+ import { FirebaseApp, initializeApp } from "firebase/app";
+ import { Database, getDatabase, set } from "firebase/database";
+-import { Auth, getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
++import { Auth, getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+ import { toast } from "react-toastify";
+ 
+ const app: FirebaseApp = initializeApp(firebaseConfig);
+ const database: Database = getDatabase(app);
+ const auth: Auth = getAuth();
++const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
++const apiUrl = (route: string) => `${API_BASE}${route}`;
+ 
+ 
+-async function createUser (email: string, password: string) {
+-  const response = await fetch('http://127.0.0.1:5000/users/create', {
+-    method: 'POST',
+-    mode: "cors",
+-    headers: {
+-      'Content-Type': 'application/json'
+-    },
+-    body: JSON.stringify({email, password})
+-  });
+-  const json = await response.json();
+-  return json;
++// Public signup must use Firebase Authentication's client SDK, not an unauthenticated
++// backend endpoint that invokes Firebase Admin's privileged create_user function.
++async function createUser(email: string, password: string) {
++  const credential = await createUserWithEmailAndPassword(auth, email, password);
++  return { user_id: credential.user.uid, email: credential.user.email };
+ }
+ 
+-
+ function performSignup() {
+-  const email: string = $("#signup-email-input").val();
+-  const password: string = $("#signup-password-input").val();
+-
++  const email = String($("#signup-email-input").val() || "");
++  const password = String($("#signup-password-input").val() || "");
+   createUser(email, password)
+-    .then(() => {
+-      signInWithEmailAndPassword(auth, email, password)
+-        .then(() => {
+-          window.location.replace("/");
+-        });
+-    })
+-    .catch((e) => {
+-      toast(`Sign up failed: ${e}`, {
+-        position: "top-right",
+-        hideProgressBar: true,
+-        closeOnClick: true,   
+-        pauseOnHover: true,
+-        draggable: true,
+-        progress: undefined,
+-        theme: "light"
+-      });
+-    });
+-};
++    .then(() => { window.location.replace("/"); })
++    .catch(() => toast.error("Não foi possível criar a conta. Verifique os dados e tente novamente."));
++}
+ 
+ /**
+  * This function performs the user login transaction with firebase.
+@@ -88,10 +67,11 @@
+     const idToken = await user?.getIdToken()
+ 
+     try {
+-      const response = await fetch(`http://127.0.0.1:5000/users/info?id_token=${idToken}`, {
++      const response = await fetch(apiUrl('/users/info'), {
+         method: "GET",
+         headers: {
+-            "Content-Type": "application/json"
++            "Content-Type": "application/json",
++            "Authorization": `Bearer ${idToken}`
+         }
+       })
+ 
+@@ -154,17 +134,18 @@
+     college: college,
+     courses: courses,
+     about: about,
+-    id_token: idToken
+   };
+ 
+-  fetch("http://127.0.0.1:5000/users/info", {
++  fetch(apiUrl('/users/info'), {
+     method: "POST",
+     headers: {
+         "Content-Type": "application/json",
++        "Authorization": `Bearer ${idToken}`
+     },
+     body: JSON.stringify(data)
+   })
+-  .then(() => {
++  .then((response) => {
++    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+     toast.success("Successfully saved your information!");
+   })
+   .catch((e: Error) => {
+@@ -181,9 +162,9 @@
+  */
+ async function fetchCourseSphereResponse(query: string) {
+   const user = auth.currentUser;
+-  const idToken = user?.getIdToken();
+-  const data = { query, idToken };
+-  const response = await fetch("http://127.0.0.1:5000/users/query", {
++  const idToken = await user?.getIdToken();
++  const data = { query };
++  const response = await fetch(apiUrl('/users/query'), {
+     method: "POST",
+     headers: {
+       "Content-Type": "application/json",
+@@ -191,7 +172,7 @@
+     },
+     body: JSON.stringify(data)
+   })
+-  .then(response => response.json())
++  .then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); })
+   .then(result => {
+     toast.success("Successfully retrieved bot response!");
+     return {
+@@ -203,7 +184,7 @@
+     console.error("Failed to fetch bot response:", error);
+     toast.error(`Failed to fetch bot response: ${error.message}`);
+     return {
+-      botResponse: `Failed to get bot response, most likely an Unsupported Query: echo "${query}", This is testing, in the future, it will simply return: "Unsupported Query"`,
++      botResponse: "Não foi possível obter recomendações. Tente novamente.",
+       newRecommendations: []
+     };
+   });
+@@ -226,14 +207,13 @@
+   const user = auth.currentUser;
+   const idToken = await user?.getIdToken();
+ 
+-  const response = await fetch(`/chats/${chatId}/messages`, {
++  const response = await fetch(apiUrl(`/chats/${chatId}/messages`), {
+     method: 'POST',
+     headers: {
+       'Content-Type': 'application/json',
+       'Authorization': `Bearer ${idToken}`
+     },
+     body: JSON.stringify({
+-      id_token: idToken,
+       messages: messages.map(message => ({
+         sender: message.sender,
+         content: message.content,
+@@ -258,15 +238,13 @@
+   const user = auth.currentUser;
+   const idToken = await user?.getIdToken();
+ 
+-  const response = await fetch(`/chats/${chatId}/messages/${messageId}`, {
++  const response = await fetch(apiUrl(`/chats/${chatId}/messages/${messageId}`), {
+     method: 'PUT',
+     headers: {
+-      'Content-Type': 'application/json'
++      'Content-Type': 'application/json',
++      'Authorization': `Bearer ${idToken}`
+     },
+-    body: JSON.stringify({
+-      id_token: idToken,
+-      content: updatedContent
+-    })
++    body: JSON.stringify({content: updatedContent})
+   });
+   
+   const data = await response.json();
+@@ -280,7 +258,7 @@
+   const user = auth.currentUser;
+   const idToken = await user?.getIdToken();
+ 
+-  const response = await fetch(`/chats/${chatId}/messages/${messageId}`, {
++  const response = await fetch(apiUrl(`/chats/${chatId}/messages/${messageId}`), {
+     method: 'DELETE',
+     headers: {
+       'Content-Type': 'application/json',
+@@ -301,7 +279,7 @@
+   const user = auth.currentUser;
+   const idToken = await user?.getIdToken();
+ 
+-  const response = await fetch("http://127.0.0.1:5000/hash", {
++  const response = await fetch(apiUrl('/hash'), {
+     method: 'POST',
+     headers: {
+       'Content-Type': 'application/json',
