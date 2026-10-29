@@ -1,0 +1,11 @@
+COURS​​ESPHERE V-LAB — R7 DERIVADA DA V19.9 (NÃO É A V19.15)
+Data: 2026-10-25
+Suíte offline Python: 561/561 PASS
+Novos testes na R7: 43
+Prova duas réplicas HTTP sintéticas + SQLite: PASS, 30 aceitas e 11 limitadas, BOLA negado
+3 scripts Node: PASS
+2 provas Nginx nativo: PASS (upstreams sintéticos)
+CI/Compose/Prometheus YAML: validado estruturalmente
+Gate R7 derivado: 22/100, 3/8 — não pronto para submissão
+Provas integradas Firebase/Docker V19.15: NÃO EXECUTADAS
+Nota: não há alegação de deploy, produção ou publicação.

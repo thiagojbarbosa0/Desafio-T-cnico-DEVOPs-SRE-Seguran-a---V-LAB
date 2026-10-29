@@ -1,0 +1,7 @@
+CourseSphere V-Lab R2 — mudança real em base V19.9 recuperada
+Versão editada: V19.9 Work refinada, NÃO checkout V19.15.
+Resultados novos: 419/419 testes Python; 3 testes Node; 2 verificadores Nginx reais com upstream sintético; preflight 343 arquivos texto sem flags.
+Mudança crítica: impedir retrocesso de janela de quota entre réplicas com relógios divergentes. Mock transacional, NÃO substitui teste real Firebase.
+Lockfile antigo V19.9: 412 entradas npm, 3 scripts de instalação, manifest+SRI+URL consistente. Não executado npm audit nem npm ci do checkout novo.
+Gate recalculado V19.9 após invalidar provas dependentes de backend/shared_quota.py: 22/100 (3/8), NÃO mede V19.15.
+A V19.15 ainda precisa de validação de código exato e Docker+Firebase+React. Não publicar upstream sem licença e saneamento Git history.

@@ -1,0 +1,16 @@
+CourseSphere V-Lab — checkpoint R8 (derivado da V19.9/R7; NÃO V19.15)
+
+EXECUTADO:
+- Correção atômica de escrita de eventos para seis mutações SQLite.
+- Gatilhos append-only para auditoria local, sem alegação de imutabilidade administrativa.
+- Rejeição de headers HTTP ambíguos e validação de rótulo de instância.
+- Readiness genérica 503 se SQLite indisponível.
+- 606/606 regressões Python, 3 Node, 2 provas Nginx nativo.
+- Prova R8 HTTP sintética duas instâncias: 8/8 critérios.
+- Gate derivado 22/100 (3/8), ready_for_submission=false.
+
+AINDA NÃO REVALIDADO:
+- Checkout V19.15, Flask/Firebase Auth/RTDB, Docker integrado, build atual React.
+- Cinco achados independentes upstream, três causa-raiz e publicação autorizada.
+
+Todos os tokens e perfis da prova R8 são sintéticos. Não substituir a V19.15.

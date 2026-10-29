@@ -1,0 +1,10 @@
+COURSESPHERE V15 — NÃO É NECESSÁRIO TESTAR AGORA
+
+1. Leia docs/HANDOFF_V15.md: objetivo, arquitetura, prioridades, resultados e bloqueios.
+2. Veja docs/CHANGELOG_V15.md: todas as mudanças desde V14.3.
+3. Testes desta versão: 170/170 Python, Nginx 20/20 + 8/8, TypeScript 22 arquivos somente sintaxe.
+4. Aceite ponderado desta cópia: 15%, porque os testes integrados Fedora/Docker ainda não foram incluídos como provas desta revisão.
+5. Quando decidir testar no Fedora:
+   bash scripts/fedora_validation_v15.sh --install-deps --with-docker
+6. Não confundir o laboratório sintético com cinco falhas demonstradas no CourseSphere original.
+7. Não publicar o projeto antes de confirmar os direitos de reutilização do upstream e a rotação do segredo detectado.

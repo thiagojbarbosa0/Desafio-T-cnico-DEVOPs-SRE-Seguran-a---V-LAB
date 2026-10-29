@@ -1,0 +1,18 @@
+COURSESPHERE V19.5 — STATUS CURTO
+
+IMPLEMENTAÇÃO ESTIMADA: 69% (estimativa qualitativa interna).
+ACEITE PONDERADO COMPROVADO: 15% (2/8 critérios do controle interno).
+PRONTO PARA SUBMISSÃO? NÃO.
+
+COMPROVADO NESTA RODADA:
+- 281/281 testes offline Python aprovados.
+- 3 scripts de isolamento de sessão Node aprovados.
+- Nginx nativo: 40 requests = 20/20; depois de derrubar uma instância 8/8.
+- Gateway: token sintético em URL rejeitado, logs JSON sem query string.
+- F04: exposição estática de arquivo com campos client_id/client_secret no ZIP original comprovada SEM copiar dados sensíveis nem contatar serviço externo.
+- Scanner agora detecta segredos com formato OAuth em JSON renomeado.
+
+NÃO EXECUTADO AQUI: Flask HTTP com bibliotecas reais, Firebase Emulator, build React, Docker/Grafana/Prometheus.
+
+PRÓXIMO PASSO: ler HANDOFF_V19_5.md. Para rodar os testes disponíveis: bash scripts/verify_local_v19_5.sh
+O achado F04 NÃO prova validade da credencial. F01/F02 dependem de política funcional. Os cinco achados independentes precisam de verificação final.

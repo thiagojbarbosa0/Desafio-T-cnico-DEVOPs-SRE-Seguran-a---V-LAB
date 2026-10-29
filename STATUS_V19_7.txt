@@ -1,0 +1,17 @@
+CourseSphere V19.7 — RESUMO DE CONTROLE
+
+Origem: derivado de LambdaAK/CourseSphere (Flask + React/TS + Firebase + SQLite).
+Duas stacks: laboratório didático isolado e NOVA implantação separada do Flask/React original.
+
+ENTREGUE NESTA VERSÃO:
+- Docker Compose opcional para 2 Gunicorn Flask + React + Nginx (porta localhost:8081).
+- Gateway real da stack oficial com testes de roteamento, failover e logs sem query.
+- Dockerfiles nonroot, arquivos .dockerignore, pipeline CI e verificadores.
+- 14 novas regressões de contrato e evidências (e mais testes acumulados).
+
+NÃO COMPROVADO NESTE AMBIENTE: execução Docker original, Firebase Auth/RTDB Emulator, React build completo, métricas Grafana da aplicação original, definição final dos 5 achados/3 correções com política do negócio.
+
+PRIMEIRO COMANDO: bash scripts/verify_local_v19_7.sh
+TESTE DOCKER OPCIONAL: python3 scripts/verify_official_docker_v19_7.py --failover (após compose.official.yaml up)
+
+PERCENTUAIS: consulte evidence/generated/RELEASE_GATE_V19_7.json. Os pesos são internos, nunca nota da banca.

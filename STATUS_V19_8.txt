@@ -1,0 +1,30 @@
+COURSESPHERE V19.8 — STATUS AUDITADO
+
+BASE: V19.7; stacks sintética e original permanecem separadas.
+
+IMPLEMENTADO NESTA VERSÃO:
+- Scrapes remotos /metrics por Bearer secret file, sem expor no gateway.
+- Prometheus autentica e consulta cada réplica do Flask original.
+- Grafana provisionado com painel ORIGINAL, 2 SLOs e alertas.
+- Compose overlay opcional + gerador de segredos 0600 + detector de symlinks.
+- Verificador Docker real com failover/recuperação, sanitizado.
+- 8 casos de HTTP Flask REAL preparadas e CI atualizado.
+
+EXECUTADO E APROVADO LOCALMENTE:
+- 337 testes Python offline.
+- 3 testes Node de isolamento de sessão.
+- Nginx nativo da stack original com upstreams simulados; 8/8 após uma falha.
+- Nginx nativo da sandbox com balanceamento e failover.
+- Parse YAML estático de Compose, Prometheus, regras, Grafana e Actions.
+
+NÃO EXECUTADO AQUI:
+- Flask real WSGI V19.8: 8 SKIPPED, runner retornou erro.
+- Docker e Prometheus/Grafana: Docker CLI ausente.
+- React npm build e Firebase Emulator contra esta versão.
+
+VALORES INTERNOS: implementação estimada 73%, aceite verificado 15%.
+PENDÊNCIAS DO EDITAL: 5 achados upstream em 2 categorias, 3 causas-raiz com provas,
+Firebase e React reais, Docker real + monitoramento, review humano/licença/segredos.
+
+LEIA: HANDOFF_V19_8.md, README_V19_8_COMECE_AQUI.md
+RODAR: bash scripts/verify_local_v19_8.sh

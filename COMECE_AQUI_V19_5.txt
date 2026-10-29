@@ -1,0 +1,14 @@
+COURSESPHERE V19.5 — CONTINUIDADE V-LAB
+
+BASE: V19.4, sem recomeçar projeto ou mudar o visual SaaS discreto.
+AVANÇO: achado F04 confirmado em ZIP original como exposição estática de material de credenciais, SEM copiar segredo para a entrega e SEM alegar validade.
+CONTROLE: o preflight agora reconhece JSON OAuth mesmo quando o arquivo é renomeado. O pacote ZIP final é varrido adicionalmente.
+
+COMANDO OFFLINE: bash scripts/verify_local_v19_5.sh
+COMPROVAÇÃO ESTÁTICA F04, apenas se houver ZIP original autorizado:
+  python3 scripts/prove_upstream_credential_f04.py --source /caminho/CourseSphere-main.zip
+GATE: python3 -m scripts.release_gate_v19_5
+
+NÃO TENTAR CONTATO COM REDDIT OU FIREBASE ORIGINAL. NÃO PUBLICAR MATERIAL DE SEGREDOS.
+PENDÊNCIAS: Firebase Emulator, build React desta versão, Docker/Grafana, validação da política sobre F01/F02, licença e notificação/rotação pelo proprietário.
+DOCUMENTOS: HANDOFF_V19_5.md, docs/RELATORIO_APPSEC_V19_5.md.

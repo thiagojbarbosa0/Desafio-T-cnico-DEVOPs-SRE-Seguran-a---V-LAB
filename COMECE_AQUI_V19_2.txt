@@ -1,0 +1,31 @@
+COURSESPHERE V19.2 — CONTINUIDADE DO WORK
+
+Leia primeiro: docs/HANDOFF_WORK_V19_2.md
+Base: V19.1 entregue pelo ChatGPT Work, com correções HTTP 413 e provas reais de Flask/Nginx.
+
+MUDANÇA PRINCIPAL: proteção no React contra vazamento visual de dados entre contas após troca de usuário/logout e cancelamento/descartes de respostas antigas.
+
+TESTADO AQUI:
+- 227 testes Python: OK
+- controle de sessão TS compilado: OK
+- callback do UserChats com A->B/logout: OK (ambiente simulado)
+- sintaxe TypeScript: OK
+- Nginx nativo com réplica sintética: OK
+
+PENDENTE:
+- build completo do React V19.2 no Fedora
+- Firebase Emulator e Docker/Grafana
+- revisão final de cinco achados upstream e três causas raízes
+- direitos de redistribuição do repositório original
+
+ACEITE INTERNO DA CÓPIA ATUAL: 35% (3/8 gates), pois o React foi alterado e a prova de build V19.1 não se aplica. Antes das mudanças, o Work provou 42% na V19.1.
+
+ROTEIRO:
+  bash scripts/verify_frontend_build_v14_2.sh
+  node scripts/test_session_gate_v19_2.cjs
+  node scripts/test_user_chats_runtime_v19_2.cjs
+  node scripts/test_profile_session_runtime_v19_2.cjs
+  python3 -m scripts.record_offline_v16
+  python3 -m scripts.release_gate_v19
+
+Use sempre dados e emuladores locais. Não publique o laboratório vulnerável.
