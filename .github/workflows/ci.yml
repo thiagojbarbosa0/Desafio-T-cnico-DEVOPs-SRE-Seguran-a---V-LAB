@@ -67,7 +67,7 @@ jobs:
           python3 -m scripts.release_gate_r11
       - name: Upload R10 synthetic absolute-deadline proof (no credentials)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: r10-synthetic-absolute-deadline
           path: |
@@ -76,7 +76,7 @@ jobs:
           if-no-files-found: warn
       - name: Upload R9 synthetic transport proof (no user credentials)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: r9-synthetic-tcp-transport
           path: |
@@ -85,7 +85,7 @@ jobs:
           if-no-files-found: warn
       - name: Upload R8 synthetic audit proof (no real credentials)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: r8-synthetic-transactional-audit
           path: |
@@ -94,7 +94,7 @@ jobs:
           if-no-files-found: warn
       - name: Upload R7 synthetic two-replica HTTP evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: r7-synthetic-two-replica-http
           path: evidence/generated/R7_SYNTHETIC_REPLICA_HTTP.json
@@ -109,7 +109,7 @@ jobs:
         run: python3 scripts/generate_sbom.py
       - name: Upload sanitized offline evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: original-handler-offline-evidence
           path: |
@@ -147,7 +147,7 @@ jobs:
           node scripts/test_profile_session_runtime_v19_2.cjs
       - name: Save verified frontend build evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: original-react-production-build
           path: evidence/generated/FRONTEND_BUILD_V13.json
@@ -180,7 +180,7 @@ jobs:
             --output evidence/generated/NPM_AUDIT_TRIAGE_VLAB.json
       - name: Save sanitized npm advisory summary only
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-sca-sanitized-triage
           path: evidence/generated/NPM_AUDIT_TRIAGE_VLAB.json
@@ -216,7 +216,7 @@ jobs:
           python3 scripts/check_nginx_main_config_v19_3.py
           python3 scripts/prove_nginx_native.py
       - name: Save load distribution and failover evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: nginx-actual-gateway-load-failover
@@ -241,7 +241,7 @@ jobs:
           python3 scripts/prove_original_flask_nginx.py
       - name: Publish Flask+Nginx evidence only when recorded
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: original-flask-two-replicas-native-nginx
           path: evidence/generated/NGINX_ORIGINAL_FLASK_STUBBED_V19.json
@@ -262,7 +262,7 @@ jobs:
         run: python3 scripts/prove_official_nginx_contract_v19_7.py
       - name: Publish labeled original-stack native Nginx evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: original-stack-native-nginx-routing-contract
           path: evidence/generated/NGINX_OFFICIAL_ROUTING_V19_7.json
@@ -282,7 +282,7 @@ jobs:
         run: python3 scripts/verify_official_docker_v19_7.py --failover
       - name: Publish labeled original Docker evidence (without credentials)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: original-flask-react-docker-two-replicas
           path: evidence/runtime/OFFICIAL_DOCKER_V19_7.json
@@ -305,7 +305,7 @@ jobs:
         run: python3 scripts/verify_official_observability_v19_8.py --failover
       - name: Persist source-hash-bound proof without secrets
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: original-flask-prometheus-grafana-v19-8
           path: evidence/runtime/OFFICIAL_OBSERVABILITY_V19_8.json
@@ -329,7 +329,7 @@ jobs:
           python3 -m scripts.release_gate_r12 --require-r12
       - name: Upload isolated R12 offline parser proof
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: r12-offline-strict-json-not-flask-firebase
           path: evidence/generated/R12_ORIGINAL_FLASK_STRICT_JSON_OFFLINE.json
@@ -361,7 +361,7 @@ jobs:
         run: python3 -m integration.run_v19_8_metrics_runtime
       - name: Upload provenance-labeled before/after HTTP evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: flask-http-original-vs-corrected-synthetic-services
           path: |
@@ -399,7 +399,7 @@ jobs:
         run: python3 -m scripts.release_gate_r14 --require-r14
       - name: Save sanitized HTTP integration results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: original-flask-firebase-emulator-tests
           path: |
@@ -430,7 +430,7 @@ jobs:
         run: python3 scripts/verify_docker_stack.py --failover
       - name: Save ONLY sanitized operational evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docker-prometheus-grafana-failover
           path: evidence/runtime/DOCKER_STACK_V13.json
@@ -468,7 +468,7 @@ jobs:
         run: bash scripts/verify_integrated_native_work.sh
       - name: Save sanitized source-bound proof
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: r15-native-real-firebase-failover
           path: evidence/generated/INTEGRATED_NATIVE_WORK.json
